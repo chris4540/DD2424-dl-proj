@@ -41,33 +41,27 @@ class VGG(nn.Module):
         # layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
         return nn.Sequential(*layers)
 
-class VGGStudent(nn.Module):
-    REDUCE_FACTOR = 2
-    def __init__(self, vgg_name):
-        super(VGGStudent, self).__init__()
-        self.features = self._make_layers(cfg[vgg_name])
-        self.avgpool = nn.AvgPool2d(kernel_size=1, stride=1)
-        self.classifier = nn.Linear(512, 10)
+class VGGStudent(VGG):
 
-    def forward(self, x):
-        out = self.features(x)
-        out = self.avgpool(out)
-        out = out.view(out.size(0), -1)
-        out = self.classifier(out)
-        return out
+    REDUCE_FACTOR = 2
+
+    def __init__(self, vgg_name):
+        super(VGGStudent, self).__init__(vgg_name)
 
     def _make_layers(self, cfg):
         layers = []
         in_channels = 3
         for x in cfg:
             if x == 'M':
-                # add back a conpensation conv
+                # add back a conpensation convolution network to make block output
+                # consistent
                 layers += [
                     nn.Conv2d(in_channels,
                         in_channels*self.REDUCE_FACTOR, kernel_size=1, padding=0),
                     nn.BatchNorm2d(in_channels*self.REDUCE_FACTOR),
                     nn.ReLU(inplace=True)
                 ]
+
                 layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
                 # adjust the next layer input channels
                 in_channels = in_channels*self.REDUCE_FACTOR
@@ -78,12 +72,6 @@ class VGGStudent(nn.Module):
                            nn.ReLU(inplace=True)]
                 in_channels = out_channels
         return nn.Sequential(*layers)
-
-# def test():
-#     net = VGG('VGG11')
-#     x = torch.randn(2,3,32,32)
-#     y = net(x)
-#     print(y.size())
 
 if __name__ == "__main__":
     teacher = VGG('VGG16')
