@@ -4,21 +4,25 @@ import torch.nn as nn
 
 
 cfg = {
-    'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'VGG13': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
+    # 'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
+    # 'VGG13': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
+    # 'VGG16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
     'VGG16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
-    'VGG19': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
+    # 'VGG19': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
 }
+
 
 
 class VGG(nn.Module):
     def __init__(self, vgg_name):
         super(VGG, self).__init__()
         self.features = self._make_layers(cfg[vgg_name])
+        self.avgpool = nn.AvgPool2d(kernel_size=1, stride=1)
         self.classifier = nn.Linear(512, 10)
 
     def forward(self, x):
         out = self.features(x)
+        out = self.avgpool(out)
         out = out.view(out.size(0), -1)
         out = self.classifier(out)
         return out
@@ -34,14 +38,65 @@ class VGG(nn.Module):
                            nn.BatchNorm2d(x),
                            nn.ReLU(inplace=True)]
                 in_channels = x
-        layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
+        # layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
         return nn.Sequential(*layers)
 
+class VGGStudent(nn.Module):
+    REDUCE_FACTOR = 2
+    def __init__(self, vgg_name):
+        super(VGGStudent, self).__init__()
+        self.features = self._make_layers(cfg[vgg_name])
+        self.avgpool = nn.AvgPool2d(kernel_size=1, stride=1)
+        self.classifier = nn.Linear(512, 10)
 
-def test():
-    net = VGG('VGG11')
+    def forward(self, x):
+        out = self.features(x)
+        out = self.avgpool(out)
+        out = out.view(out.size(0), -1)
+        out = self.classifier(out)
+        return out
+
+    def _make_layers(self, cfg):
+        layers = []
+        in_channels = 3
+        for x in cfg:
+            if x == 'M':
+                # add back a conpensation conv
+                layers += [
+                    nn.Conv2d(in_channels,
+                        in_channels*self.REDUCE_FACTOR, kernel_size=1, padding=0),
+                    nn.BatchNorm2d(in_channels*self.REDUCE_FACTOR),
+                    nn.ReLU(inplace=True)
+                ]
+                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+                # adjust the next layer input channels
+                in_channels = in_channels*self.REDUCE_FACTOR
+            else:
+                out_channels = x // self.REDUCE_FACTOR
+                layers += [nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
+                           nn.BatchNorm2d(out_channels),
+                           nn.ReLU(inplace=True)]
+                in_channels = out_channels
+        return nn.Sequential(*layers)
+
+# def test():
+#     net = VGG('VGG11')
+#     x = torch.randn(2,3,32,32)
+#     y = net(x)
+#     print(y.size())
+
+if __name__ == "__main__":
+    teacher = VGG('VGG16')
+    student = VGGStudent('VGG16')
     x = torch.randn(2,3,32,32)
-    y = net(x)
-    print(y.size())
+    y1 = teacher(x)
+    y2 = student(x)
+    assert y1.shape == y2.shape
 
-# test()
+    def get_sum_params(model):
+        ret = 0
+        for p in model.parameters():
+            ret += p.numel()
+        return ret
+    print("# of params in teacher submodel:", get_sum_params(teacher))
+    print("# of params in student submodel:", get_sum_params(student))
