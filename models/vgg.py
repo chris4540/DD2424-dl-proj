@@ -73,6 +73,58 @@ class VGGStudent(VGG):
                 in_channels = out_channels
         return nn.Sequential(*layers)
 
+# ============================================================================
+class AuxiliaryVgg(nn.Module):
+    """
+    The auxiliary function
+    """
+
+    def __init__(self, vgg_name, phase_idx):
+        self.vgg_name = vgg_name
+        self.phase_idx = phase_idx
+
+        # build the network
+        self.avgpool = nn.AvgPool2d(kernel_size=1, stride=1)
+        self.classifier = nn.Linear(512, 10)
+
+        # build the features
+        self._build_features()
+
+    def forward(self, x):
+        out = self.features(x)
+        out = self.avgpool(out)
+        out = out.view(out.size(0), -1)
+        out = self.classifier(out)
+        return out
+
+    def load_weight_from_last_phase(self, aux_vgg_net):
+        pass
+
+
+    def _splite_cfg(cfg, k=0):
+        """
+        Split the configuration into teacher subblocks and student subblocks
+
+        Return:
+            a tuple of the configuration of teacher subnet and student subnet
+        """
+
+        teacher_cfg = None
+        student_cfg = None
+        split_idx = 0
+        max_pool_cnt = 0
+        for idx, l in enumerate(cfg):
+            if l == 'M':
+                max_pool_cnt += 1
+                if max_pool_cnt == k:
+                    split_idx = idx
+
+        # splite the configuration
+        student_cfg = cfg[:split_idx]
+        teacher_cfg = cfg[split_idx:]
+        return student_cfg, teacher_cfg
+
+
 if __name__ == "__main__":
     teacher = VGG('VGG16')
     student = VGGStudent('VGG16')
