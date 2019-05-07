@@ -9,7 +9,6 @@ cd /content/drive/My\ Drive/StudyInKTH/DD2424-DL/pytorch-cifar
 """
 
 from models.vgg import VGG
-from models.vgg import VGGStudent
 import torch
 import torchvision
 import torch.backends.cudnn as cudnn
@@ -27,7 +26,7 @@ from utils.load_data import get_test_cifar10_dataloader
 if __name__ == "__main__":
     # =============================================================
     # Settings
-    chk_pt_file = './vgg_16_checkpoint.tar'
+    chk_pt_file = './vgg_16_teacher_chkpt.tar'
     checkpoint = None
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     resume = False
@@ -64,8 +63,7 @@ if __name__ == "__main__":
         testloader = get_test_cifar10_dataloader('../../data', batch_size)
     ###########################################################################
     # initialize the model
-    net = VGGStudent('VGG16')
-    # net = VGG('VGG16')
+    net = VGG('VGG16')
     if checkpoint:
         net.load_state_dict(checkpoint['state_dict'])
 
