@@ -136,8 +136,11 @@ class AuxiliaryVgg(nn.Module):
             st, et = self._teacher_blk_idxs[blk-1], self._teacher_blk_idxs[blk]
             #
             for i, j in zip(range(ss, es), range(st, et)):
-                # TODO: think of transfering values
+                # TODO: think of transfering values, check if all in cpu
                 self.features[i] = teacher.features[j]
+
+        # copy classification layers
+        self.classifier = teacher.classifier
 
     def _set_teacher_blk_idxs(self, teacher):
         self._teacher_blk_idxs = [0]
