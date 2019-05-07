@@ -12,7 +12,7 @@ def get_img_tranformation():
                              std=(0.2023, 0.1994, 0.2010))])
     return ret
 
-def evalation(data_loader, model, criterion):
+def evalation(data_loader, model, criterion, device='cuda'):
     """
     Run evaluation
     Return:
@@ -25,9 +25,10 @@ def evalation(data_loader, model, criterion):
     with torch.no_grad():
         for inputs, targets in data_loader:
             # load them to GPU
-            inputs = inputs.cuda()
-            targets = targets.cuda()
-            inputs = inputs.half()
+            inputs = inputs.to(device)
+            targets = targets.to(device)
+            if device == 'cuda':
+                inputs = inputs.half()
 
             # predict
             outputs = model(inputs)
@@ -39,7 +40,7 @@ def evalation(data_loader, model, criterion):
     score = correct / total
     return score
 
-def train(train_loader, model, criterion, optimizer, scheduler):
+def train(train_loader, model, criterion, optimizer, scheduler, device="cuda"):
     """
     Run one train epoch
     """
@@ -53,11 +54,13 @@ def train(train_loader, model, criterion, optimizer, scheduler):
     correct = 0
 
     n_batch = len(train_loader)
+    log_batch_time = time.time()
     for batch_idx, (inputs, targets) in enumerate(train_loader):
         ts = time.time()
-        inputs = inputs.cuda()
-        targets = targets.cuda()
-        inputs = inputs.half()
+        inputs = inputs.to(device)
+        targets = targets.to(device)
+        if device == 'cuda':
+            inputs = inputs.half()
 
         # compute output
         output = model(inputs)
@@ -81,8 +84,11 @@ def train(train_loader, model, criterion, optimizer, scheduler):
         # ========================================================
         if batch_idx % (n_batch / 10) == 0:
             et = time.time() - ts
-            print("[{}/{}] Batch time used: {:.3f}".format(
-                    batch_idx, n_batch, et))
+            time_elapsed = time.time() - log_batch_time
+            print("[{}/{}] Batch time used: {:.3f}; Count from last shown: {:.3f}".format(
+                    batch_idx, n_batch, et, time_elapsed))
+            # reset
+            log_batch_time = time.time()
 
     # print statistics
     train_loss = train_loss / len(train_loader)
