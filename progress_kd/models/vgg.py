@@ -92,22 +92,56 @@ class AuxiliaryVgg(nn.Module):
         # build the features
         self._build_features(cfg[vgg_name])
 
+        # freeze the layers
+        self._freeze_all_layers()
+
+        # defreeze the block we want to train
+        self._defreeze_target_block()
+
     def forward(self, x):
         out = self.features(x)
         out = self.avgpool(out)
-        out = out.view(out.size(0), -1)
+        out = out.view(out.size(0), -1) # reshape the output
         out = self.classifier(out)
         return out
+
+    def _defreeze_target_block(self):
+        if self.phase_idx == 0:
+            # this is the teacher network, nothing to defreeze
+            return
+
+        block_bnd_idx = [0]
+        for l_idx, f in enumerate(self.features):
+            if isinstance(f, nn.MaxPool2d):
+                block_bnd_idx.append(l_idx)
+                # TODO: early complete the linear search
+
+        # =====================================
+        # consider the block start index and end index
+        blk_start = block_bnd_idx[self.phase_idx-1]
+        blk_end = block_bnd_idx[self.phase_idx]
+
+        # defreeze the feature layers
+        for f in self.features[blk_start:blk_end]:
+            for p in f.parameters():
+                p.requires_grad = True
+
+    def _freeze_all_layers(self):
+        for param in self.parameters():
+            param.requires_grad = False
 
     def load_weight_from_last_phase(self, aux_vgg_net):
         pass
 
     def _build_features(self, cfg):
+        # get the block-wise configuration
         student_cfg, teacher_cfg = self._splite_cfg(cfg, self.phase_idx)
-        # print(student_cfg)
-        # print(teacher_cfg)
+
         student_layers, channels = self._make_student_layers(student_cfg, 3)
+
         teacher_layers = self._make_teacher_layers(teacher_cfg, channels)
+
+        # set-up the features
         self.features = nn.Sequential(*student_layers, *teacher_layers)
 
     @staticmethod
@@ -157,8 +191,6 @@ class AuxiliaryVgg(nn.Module):
             a tuple of the configuration of teacher subnet and student subnet
         """
 
-        teacher_cfg = None
-        student_cfg = None
         split_idx = 0
         max_pool_cnt = 0
         for idx, l in enumerate(cfg):
