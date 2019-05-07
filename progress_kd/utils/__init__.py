@@ -56,11 +56,6 @@ def train(train_loader, model, optimizer, scheduler, device="cuda"):
 
     n_batch = len(train_loader)
     log_batch_time = time.time()
-
-    loss_fn = nn.CrossEntropyLoss()
-    if device == 'cuda':
-        loss_fn = loss_fn.half()
-
     for batch_idx, (inputs, targets) in enumerate(train_loader):
         ts = time.time()
         inputs = inputs.to(device)
@@ -68,11 +63,9 @@ def train(train_loader, model, optimizer, scheduler, device="cuda"):
         if device == 'cuda':
             inputs = inputs.half()
 
-
         # compute output
         output = model(inputs)
-        loss = loss_fn(output, targets)
-        # loss = model.get_loss(output, targets)
+        loss = model.get_loss(output, targets)
 
         # compute gradient and do SGD step
         optimizer.zero_grad()

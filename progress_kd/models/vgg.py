@@ -13,7 +13,7 @@ cfg = {
 
 
 
-class VGG(nn.Module):
+class Vgg(nn.Module):
     def __init__(self, vgg_name):
         super().__init__()
         self.vgg_name = vgg_name
@@ -44,20 +44,16 @@ class VGG(nn.Module):
                 in_channels = x
         return nn.Sequential(*layers)
 
-    def half(self):
-        super().half()
-        self._cross_entropy_loss_fn.half()
-
     def get_loss(self, outputs, labels):
         ret = self._cross_entropy_loss_fn(outputs, labels)
         return ret
 
-class VGGStudent(VGG):
+class VggStudent(Vgg):
 
     REDUCE_FACTOR = 2
 
     def __init__(self, vgg_name):
-        super(VGGStudent, self).__init__(vgg_name)
+        super().__init__(vgg_name)
 
     def _make_layers(self, cfg):
         layers = []
@@ -128,10 +124,6 @@ class AuxiliaryVgg(nn.Module):
         # set teacher subnetwork block
         self._set_teacher_subnet_blk(teacher_model)
 
-    def half(self):
-        super().half()
-        self._cross_entropy_loss_fn.half()
-
     def _set_teacher_subnet_blk(self, teacher):
         # searching the teacher block
         blk_end_idx = 0
@@ -142,12 +134,12 @@ class AuxiliaryVgg(nn.Module):
                 cnt += 1
                 if cnt == self.phase_idx:
                     break
-
-        print("_set_teacher_subnet_blk: idx: ", blk_end_idx)
-
         self._teacher_sub_blk = teacher.features[:blk_end_idx]
         for p in self._teacher_sub_blk.parameters():
             p.requires_grad = False
+
+    def drop_teacher_subnet_blk(self):
+        self._teacher_sub_blk = None
 
     def forward(self, x):
         # calcualte the teacher sub-block output
@@ -287,8 +279,8 @@ class AuxiliaryVgg(nn.Module):
 
 
 if __name__ == "__main__":
-    teacher = VGG('VGG16')
-    student = VGGStudent('VGG16')
+    teacher = Vgg('VGG16')
+    student = VggStudent('VGG16')
     x = torch.randn(2,3,32,32)
     y1 = teacher(x)
     y2 = student(x)
