@@ -21,6 +21,9 @@ class VGG(nn.Module):
         self.avgpool = nn.AvgPool2d(kernel_size=1, stride=1)
         self.classifier = nn.Linear(512, 10)
 
+        #
+        self._cross_entropy_loss_fn = nn.CrossEntropyLoss()
+
     def forward(self, x):
         out = self.features(x)
         out = self.avgpool(out)
@@ -39,8 +42,15 @@ class VGG(nn.Module):
                            nn.BatchNorm2d(x),
                            nn.ReLU(inplace=True)]
                 in_channels = x
-        # layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
         return nn.Sequential(*layers)
+
+    def half(self):
+        super().half()
+        self._cross_entropy_loss_fn.half()
+
+    def get_loss(self, outputs, labels):
+        ret = self._cross_entropy_loss_fn(outputs, labels)
+        return ret
 
 class VGGStudent(VGG):
 
@@ -86,6 +96,10 @@ class AuxiliaryVgg(nn.Module):
         super().__init__()
         assert isinstance(teacher_model, nn.Module)
 
+        #
+        self._cross_entropy_loss_fn = nn.CrossEntropyLoss()
+
+
         self.alpha = alpha
 
         self.vgg_name = teacher_model.vgg_name
@@ -113,6 +127,10 @@ class AuxiliaryVgg(nn.Module):
 
         # set teacher subnetwork block
         self._set_teacher_subnet_blk(teacher_model)
+
+    def half(self):
+        super().half()
+        self._cross_entropy_loss_fn.half()
 
     def _set_teacher_subnet_blk(self, teacher):
         # searching the teacher block
@@ -163,7 +181,7 @@ class AuxiliaryVgg(nn.Module):
         diff = diff.view(diff.size(0), -1)  # flatten
         local_loss = torch.norm(diff, p='fro', dim=1)
         batch_local_loss = torch.mean(local_loss)
-        ret = nn.CrossEntropyLoss()(outputs, labels) + self.alpha*batch_local_loss
+        ret = self._cross_entropy_loss_fn(outputs, labels) + self.alpha*batch_local_loss
         return ret
 
     def _set_intercept_layer_idx(self):

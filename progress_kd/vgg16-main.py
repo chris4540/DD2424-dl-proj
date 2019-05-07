@@ -7,7 +7,7 @@ from google.colab import drive
 drive.mount('/content/drive/')  # mount google drive
 cd /content/drive/My\ Drive/StudyInKTH/DD2424-DL/pytorch-cifar
 """
-
+from models.vgg import VGGStudent
 from models.vgg import VGG
 import torch
 import torchvision
@@ -26,14 +26,15 @@ from utils.load_data import get_test_cifar10_dataloader
 if __name__ == "__main__":
     # =============================================================
     # Settings
-    chk_pt_file = './vgg_16_teacher_chkpt.tar'
+    role = "teacher"
+    chk_pt_file = './vgg_16_{}_chkpt.tar'.format(role)
     checkpoint = None
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     resume = False
-    is_eval = True
+    is_eval = False
     # batch size
     batch_size = 100
-    #
+    # number of epochs
     epochs = 20
     # ================================================
     if resume or is_eval:
@@ -62,22 +63,25 @@ if __name__ == "__main__":
     else:
         testloader = get_test_cifar10_dataloader('../../data', batch_size)
     ###########################################################################
-    # initialize the model
-    net = VGG('VGG16')
+    if role == "teacher":
+        net = VGG("VGG16")
+    else:
+        net = VGGStudent("VGG16")
+
     if checkpoint:
         net.load_state_dict(checkpoint['state_dict'])
 
     net = net.to(device)
-    net.half()  # use half precision
 
-    criterion = nn.CrossEntropyLoss()
-    criterion.half()
+    if device == 'cuda':
+        net.half()  # use half precision
+
     optimizer = optim.SGD(net.parameters(), lr=0.1, momentum=0.9)
     scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 1e-2)
     best_score = -np.inf
     if is_eval:
         print("Evaluating the model with the test set")
-        score = evalation(testloader, net, criterion)
+        score = evalation(testloader, net, device)
         print("Test score: ", score)
         import sys
         sys.exit(0)
@@ -85,10 +89,10 @@ if __name__ == "__main__":
     for epoch in range(start_epoch, epochs):
         print("Epoch:", epoch)
         # train for one epoch
-        train(trainloader, net, criterion, optimizer, scheduler)
+        train(trainloader, net, optimizer, scheduler, device)
 
         # evaluate on validation set
-        valid_score = evalation(validloader, net, criterion)
+        valid_score = evalation(validloader, net, device)
         print("Validation Score: ", valid_score)
 
         if valid_score > best_score:

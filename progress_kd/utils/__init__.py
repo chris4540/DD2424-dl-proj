@@ -2,6 +2,7 @@
 Common routine to train and evaluate the models
 """
 import torch
+import torch.nn as nn
 import time
 import torchvision.transforms as transforms
 
@@ -12,7 +13,7 @@ def get_img_tranformation():
                              std=(0.2023, 0.1994, 0.2010))])
     return ret
 
-def evalation(data_loader, model, criterion, device='cuda'):
+def evalation(data_loader, model, device='cuda'):
     """
     Run evaluation
     Return:
@@ -40,7 +41,7 @@ def evalation(data_loader, model, criterion, device='cuda'):
     score = correct / total
     return score
 
-def train(train_loader, model, criterion, optimizer, scheduler, device="cuda"):
+def train(train_loader, model, optimizer, scheduler, device="cuda"):
     """
     Run one train epoch
     """
@@ -55,6 +56,11 @@ def train(train_loader, model, criterion, optimizer, scheduler, device="cuda"):
 
     n_batch = len(train_loader)
     log_batch_time = time.time()
+
+    loss_fn = nn.CrossEntropyLoss()
+    if device == 'cuda':
+        loss_fn = loss_fn.half()
+
     for batch_idx, (inputs, targets) in enumerate(train_loader):
         ts = time.time()
         inputs = inputs.to(device)
@@ -62,9 +68,11 @@ def train(train_loader, model, criterion, optimizer, scheduler, device="cuda"):
         if device == 'cuda':
             inputs = inputs.half()
 
+
         # compute output
         output = model(inputs)
-        loss = criterion(output, targets)
+        loss = loss_fn(output, targets)
+        # loss = model.get_loss(output, targets)
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
