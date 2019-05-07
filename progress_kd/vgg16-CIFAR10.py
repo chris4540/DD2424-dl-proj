@@ -21,6 +21,8 @@ import numpy as np
 from utils import evalation
 from utils import train
 from utils import get_img_tranformation
+from utils.load_data import get_train_valid_cifar10_dataloader
+from utils.load_data import get_test_cifar10_dataloader
 
 if __name__ == "__main__":
     # =============================================================
@@ -44,7 +46,7 @@ if __name__ == "__main__":
     print("================================")
     print("Going to use deive : ", device)
     print("================================")
-    img_transform = get_img_tranformation()
+    # img_transform = get_img_tranformation()
     #
     if device == 'cuda':
         cudnn.benchmark = True
@@ -57,23 +59,9 @@ if __name__ == "__main__":
     ###########################################################################
     ## obtain the dataset
     if not is_eval:
-        full_dataset = torchvision.datasets.CIFAR10(
-            root='../../data', train=True, download=False, transform=img_transform)
-        train_size = int(0.99 * len(full_dataset))
-        valid_size = len(full_dataset) - train_size
-        # split the training set into training and validation
-        train_set, valid_set = \
-            torch.utils.data.random_split(full_dataset, [train_size, valid_size])
-
-        trainloader = torch.utils.data.DataLoader(
-            train_set, batch_size=batch_size, shuffle=False, num_workers=2)
-        validloader = torch.utils.data.DataLoader(
-            valid_set, batch_size=batch_size, shuffle=False, num_workers=2)
+        trainloader, validloader = get_train_valid_cifar10_dataloader('../../data', batch_size)
     else:
-        testset = torchvision.datasets.CIFAR10(
-            root='../../data', train=False, download=False, transform=img_transform)
-        testloader = torch.utils.data.DataLoader(
-            testset, batch_size=batch_size, shuffle=False, num_workers=2)
+        testloader = get_test_cifar10_dataloader('../../data', batch_size)
     ###########################################################################
     # initialize the model
     net = VGGStudent('VGG16')
@@ -109,4 +97,4 @@ if __name__ == "__main__":
                 'state_dict': net.state_dict(),
                 'validation_score': valid_score
             }
-            save_checkpoint(saving_dict, chk_pt_file)
+            torch.save(saving_dict, chk_pt_file)
