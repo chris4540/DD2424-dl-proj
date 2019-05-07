@@ -76,10 +76,11 @@ if __name__ == "__main__":
     scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 1e-2)
     best_score = -np.inf
     if is_eval:
+        print("Evaluating the model with the test set")
         score = evalation(testloader, net, criterion)
         print("Test score: ", score)
-        import os
-        os.exit(0)
+        import sys
+        sys.exit(0)
 
     for epoch in range(start_epoch, epochs):
         print("Epoch:", epoch)

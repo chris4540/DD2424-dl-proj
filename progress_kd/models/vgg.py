@@ -78,8 +78,10 @@ class AuxiliaryVgg(nn.Module):
     """
     The auxiliary function
     """
+    REDUCE_FACTOR = 2
 
     def __init__(self, vgg_name, phase_idx):
+        super().__init__()
         self.vgg_name = vgg_name
         self.phase_idx = phase_idx
 
@@ -88,7 +90,7 @@ class AuxiliaryVgg(nn.Module):
         self.classifier = nn.Linear(512, 10)
 
         # build the features
-        self._build_features()
+        self._build_features(cfg[vgg_name])
 
     def forward(self, x):
         out = self.features(x)
@@ -100,7 +102,53 @@ class AuxiliaryVgg(nn.Module):
     def load_weight_from_last_phase(self, aux_vgg_net):
         pass
 
+    def _build_features(self, cfg):
+        student_cfg, teacher_cfg = self._splite_cfg(cfg, self.phase_idx)
+        # print(student_cfg)
+        # print(teacher_cfg)
+        student_layers, channels = self._make_student_layers(student_cfg, 3)
+        teacher_layers = self._make_teacher_layers(teacher_cfg, channels)
+        self.features = nn.Sequential(*student_layers, *teacher_layers)
 
+    @staticmethod
+    def _make_teacher_layers(cfg, in_channels):
+        layers = []
+        channels = in_channels
+        for x in cfg:
+            if x == 'M':
+                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+            else:
+                layers += [nn.Conv2d(channels, x, kernel_size=3, padding=1),
+                           nn.BatchNorm2d(x),
+                           nn.ReLU(inplace=True)]
+                channels = x
+        return layers
+
+    def _make_student_layers(self, cfg, in_channels):
+        layers = []
+        channels = in_channels
+        for x in cfg:
+            if x == 'M':
+                # add back a conpensation convolution network to make block output
+                # consistent
+                layers += [
+                    nn.Conv2d(channels, channels*self.REDUCE_FACTOR, kernel_size=1,
+                              padding=0),
+                    nn.BatchNorm2d(channels*self.REDUCE_FACTOR),
+                    nn.ReLU(inplace=True)
+                ]
+                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+                # adjust the next layer input channels
+                channels = channels*self.REDUCE_FACTOR
+            else:
+                out_channels = x // self.REDUCE_FACTOR
+                layers += [nn.Conv2d(channels, out_channels, kernel_size=3, padding=1),
+                           nn.BatchNorm2d(out_channels),
+                           nn.ReLU(inplace=True)]
+                channels = out_channels
+        return layers, channels
+
+    @staticmethod
     def _splite_cfg(cfg, k=0):
         """
         Split the configuration into teacher subblocks and student subblocks
@@ -117,7 +165,7 @@ class AuxiliaryVgg(nn.Module):
             if l == 'M':
                 max_pool_cnt += 1
                 if max_pool_cnt == k:
-                    split_idx = idx
+                    split_idx = idx+1
 
         # splite the configuration
         student_cfg = cfg[:split_idx]
