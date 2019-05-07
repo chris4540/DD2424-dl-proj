@@ -79,10 +79,13 @@ class AuxiliaryVgg(nn.Module):
     The auxiliary function
     """
     REDUCE_FACTOR = 2
+    LAMBDA_ = 1
 
-    def __init__(self, vgg_name, phase_idx):
+    def __init__(self, teacher_model, phase_idx):
         super().__init__()
-        self.vgg_name = vgg_name
+        assert isinstance(teacher_model, AuxiliaryVgg)
+
+        self.vgg_name = teacher_model.vgg_name
         self.phase_idx = phase_idx
 
         # build the network
@@ -90,7 +93,13 @@ class AuxiliaryVgg(nn.Module):
         self.classifier = nn.Linear(512, 10)
 
         # build the features
-        self._build_features(cfg[vgg_name])
+        self._build_features(cfg[self.vgg_name])
+
+        # obtain the block indices
+        self._create_blk_idxs()
+
+        #
+        self._set_intercept_layer_idx()
 
         # freeze the layers
         self._freeze_all_layers()
@@ -98,28 +107,55 @@ class AuxiliaryVgg(nn.Module):
         # defreeze the block we want to train
         self._defreeze_target_block()
 
+        # set teacher subnetwork block
+        self._set_teacher_subnet_blk(teacher_model)
+
+    def _set_teacher_subnet_blk(self, teacher):
+        self._teacher_sub_blk = teacher.features[:self._intercept_layer_idx]
+        for p in self._teacher_sub_blk.parameters():
+            p.requires_grad = False
+
     def forward(self, x):
-        out = self.features(x)
+        # apply forwarding from 0 to _intercept_layer_idx and store it
+        self.learn_blk_output = self.features[:self._intercept_layer_idx](x)
+        out = self.features[self._intercept_layer_idx:](self.learn_blk_output)
         out = self.avgpool(out)
         out = out.view(out.size(0), -1) # reshape the output
         out = self.classifier(out)
         return out
 
+    def loss_fn(self, outputs, labels):
+        """
+        Compute the cross entropy loss given outputs and labels.
+        Args:
+            outputs: (Variable) dimension batch_size x 6 - output of the model
+            labels: (Variable) dimension batch_size, where each element is a value in [0, 1, 2, 3, 4, 5]
+        Returns:
+            loss (Variable): cross entropy loss for all images in the batch
+        Note: you may use a standard loss function from http://pytorch.org/docs/master/nn.html#loss-functions. This example
+            demonstrates how you can easily define a custom loss function.
+        """
+        ret = nn.CrossEntropyLoss()(outputs, labels)
+
+        return ret
+
+    def _set_intercept_layer_idx(self):
+        self._intercept_layer_idx = self._block_bnd_idx[self.phase_idx] - 1
+
+    def _create_blk_idxs(self):
+        self._block_bnd_idx = [0]
+        for l_idx, f in enumerate(self.features):
+            if isinstance(f, nn.MaxPool2d):
+                self._block_bnd_idx.append(l_idx)
+
     def _defreeze_target_block(self):
         if self.phase_idx == 0:
             # this is the teacher network, nothing to defreeze
             return
-
-        block_bnd_idx = [0]
-        for l_idx, f in enumerate(self.features):
-            if isinstance(f, nn.MaxPool2d):
-                block_bnd_idx.append(l_idx)
-                # TODO: early complete the linear search
-
         # =====================================
         # consider the block start index and end index
-        blk_start = block_bnd_idx[self.phase_idx-1]
-        blk_end = block_bnd_idx[self.phase_idx]
+        blk_start = self._block_bnd_idx[self.phase_idx-1]
+        blk_end = self._block_bnd_idx[self.phase_idx]
 
         # defreeze the feature layers
         for f in self.features[blk_start:blk_end]:
