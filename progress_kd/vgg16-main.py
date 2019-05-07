@@ -7,8 +7,8 @@ from google.colab import drive
 drive.mount('/content/drive/')  # mount google drive
 cd /content/drive/My\ Drive/StudyInKTH/DD2424-DL/pytorch-cifar
 """
-from models.vgg import VGGStudent
-from models.vgg import VGG
+from models.vgg import VggStudent
+from models.vgg import Vgg
 import torch
 import torchvision
 import torch.backends.cudnn as cudnn
