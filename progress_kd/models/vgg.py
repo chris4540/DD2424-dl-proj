@@ -95,7 +95,6 @@ class AuxiliaryVgg(nn.Module):
         #
         self._cross_entropy_loss_fn = nn.CrossEntropyLoss()
 
-
         self.alpha = alpha
 
         self.vgg_name = teacher_model.vgg_name
@@ -115,25 +114,41 @@ class AuxiliaryVgg(nn.Module):
         #
         self._set_intercept_layer_idx()
 
+        # set teacher subnetwork block
+        self._set_teacher_blk_idxs(teacher_model)
+        self._set_teacher_subnet_blk(teacher_model)
+        self._transfer_teacher_weights(teacher_model)
+
         # freeze the layers
         self._freeze_all_layers()
-
         # defreeze the block we want to train
         self._defreeze_target_block()
 
-        # set teacher subnetwork block
-        self._set_teacher_subnet_blk(teacher_model)
+    def _transfer_teacher_weights(self, teacher):
+        num_blks = len(self._block_bnd_idx)
+        # blockwise copying
+        for blk in range(1, num_blks):
+            if blk == self.phase_idx:
+                # no copying when we checking the phase index
+                continue
+            # get student and teacher staring and ending index of a block
+            ss, es = self._block_bnd_idx[blk-1], self._block_bnd_idx[blk]
+            st, et = self._teacher_blk_idxs[blk-1], self._teacher_blk_idxs[blk]
+            #
+            for i, j in zip(range(ss, es), range(st, et)):
+                # TODO: think of transfering values
+                self.features[i] = teacher.features[j]
+
+    def _set_teacher_blk_idxs(self, teacher):
+        self._teacher_blk_idxs = [0]
+        for l_idx, f in enumerate(teacher.features):
+            if isinstance(f, nn.MaxPool2d):
+                self._teacher_blk_idxs.append(l_idx)
+        # just for checking
+        assert len(self._block_bnd_idx) == len(self._teacher_blk_idxs)
 
     def _set_teacher_subnet_blk(self, teacher):
-        # searching the teacher block
-        blk_end_idx = 0
-        cnt = 0
-        for idx, layer in enumerate(teacher.features):
-            if isinstance(layer, nn.MaxPool2d):
-                blk_end_idx = idx
-                cnt += 1
-                if cnt == self.phase_idx:
-                    break
+        blk_end_idx = self._teacher_blk_idxs[self.phase_idx]
         self._teacher_sub_blk = teacher.features[:blk_end_idx]
         for p in self._teacher_sub_blk.parameters():
             p.requires_grad = False
@@ -202,9 +217,6 @@ class AuxiliaryVgg(nn.Module):
     def _freeze_all_layers(self):
         for param in self.parameters():
             param.requires_grad = False
-
-    def load_weight_from_last_phase(self, aux_vgg_net):
-        pass
 
     def _build_features(self, cfg):
         # get the block-wise configuration
