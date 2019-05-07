@@ -15,7 +15,8 @@ cfg = {
 
 class VGG(nn.Module):
     def __init__(self, vgg_name):
-        super(VGG, self).__init__()
+        super().__init__()
+        self.vgg_name = vgg_name
         self.features = self._make_layers(cfg[vgg_name])
         self.avgpool = nn.AvgPool2d(kernel_size=1, stride=1)
         self.classifier = nn.Linear(512, 10)
@@ -79,22 +80,25 @@ class AuxiliaryVgg(nn.Module):
     The auxiliary function
     """
     REDUCE_FACTOR = 2
-    LAMBDA_ = 1
 
-    def __init__(self, teacher_model, phase_idx):
+    def __init__(self, teacher_model, phase_idx, alpha=0.1):
+        assert phase_idx > 0
         super().__init__()
-        assert isinstance(teacher_model, AuxiliaryVgg)
+        assert isinstance(teacher_model, nn.Module)
+
+        self.alpha = alpha
 
         self.vgg_name = teacher_model.vgg_name
         self.phase_idx = phase_idx
 
+        # ================================================================
         # build the network
         self.avgpool = nn.AvgPool2d(kernel_size=1, stride=1)
         self.classifier = nn.Linear(512, 10)
-
         # build the features
         self._build_features(cfg[self.vgg_name])
-
+        # ===========================================================
+        # ===========================================================
         # obtain the block indices
         self._create_blk_idxs()
 
@@ -111,20 +115,36 @@ class AuxiliaryVgg(nn.Module):
         self._set_teacher_subnet_blk(teacher_model)
 
     def _set_teacher_subnet_blk(self, teacher):
-        self._teacher_sub_blk = teacher.features[:self._intercept_layer_idx]
+        # searching the teacher block
+        blk_end_idx = 0
+        cnt = 0
+        for idx, layer in enumerate(teacher.features):
+            if isinstance(layer, nn.MaxPool2d):
+                blk_end_idx = idx
+                cnt += 1
+                if cnt == self.phase_idx:
+                    break
+
+        print("_set_teacher_subnet_blk: idx: ", blk_end_idx)
+
+        self._teacher_sub_blk = teacher.features[:blk_end_idx]
         for p in self._teacher_sub_blk.parameters():
             p.requires_grad = False
 
     def forward(self, x):
+        # calcualte the teacher sub-block output
+        self.teacher_blk_output = self._teacher_sub_blk(x)
+
         # apply forwarding from 0 to _intercept_layer_idx and store it
-        self.learn_blk_output = self.features[:self._intercept_layer_idx](x)
-        out = self.features[self._intercept_layer_idx:](self.learn_blk_output)
+        self.student_blk_output = self.features[:self._intercept_layer_idx](x)
+        out = self.features[self._intercept_layer_idx:](self.student_blk_output)
         out = self.avgpool(out)
         out = out.view(out.size(0), -1) # reshape the output
         out = self.classifier(out)
+
         return out
 
-    def loss_fn(self, outputs, labels):
+    def get_loss(self, outputs, labels):
         """
         Compute the cross entropy loss given outputs and labels.
         Args:
@@ -132,11 +152,18 @@ class AuxiliaryVgg(nn.Module):
             labels: (Variable) dimension batch_size, where each element is a value in [0, 1, 2, 3, 4, 5]
         Returns:
             loss (Variable): cross entropy loss for all images in the batch
-        Note: you may use a standard loss function from http://pytorch.org/docs/master/nn.html#loss-functions. This example
+        Note:
+            you may use a standard loss function from
+            http://pytorch.org/docs/master/nn.html#loss-functions.
+            This example
             demonstrates how you can easily define a custom loss function.
         """
-        ret = nn.CrossEntropyLoss()(outputs, labels)
-
+        # calculate the local loss
+        diff = self.teacher_blk_output - self.student_blk_output
+        diff = diff.view(diff.size(0), -1)  # flatten
+        local_loss = torch.norm(diff, p='fro', dim=1)
+        batch_local_loss = torch.mean(local_loss)
+        ret = nn.CrossEntropyLoss()(outputs, labels) + self.alpha*batch_local_loss
         return ret
 
     def _set_intercept_layer_idx(self):
