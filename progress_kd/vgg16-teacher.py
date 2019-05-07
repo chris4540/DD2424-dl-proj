@@ -30,7 +30,7 @@ if __name__ == "__main__":
     checkpoint = None
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     resume = False
-    is_eval = False
+    is_eval = True
     # batch size
     batch_size = 100
     #
@@ -78,6 +78,8 @@ if __name__ == "__main__":
     if is_eval:
         score = evalation(testloader, net, criterion)
         print("Test score: ", score)
+        import os
+        os.exit(0)
 
     for epoch in range(start_epoch, epochs):
         print("Epoch:", epoch)

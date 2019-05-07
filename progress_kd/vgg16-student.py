@@ -7,7 +7,6 @@ from google.colab import drive
 drive.mount('/content/drive/')  # mount google drive
 cd /content/drive/My\ Drive/StudyInKTH/DD2424-DL/pytorch-cifar
 """
-
 from models.vgg import VGGStudent
 import torch
 import torchvision
@@ -30,7 +29,7 @@ if __name__ == "__main__":
     checkpoint = None
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     resume = False
-    is_eval = False
+    is_eval = True
     # batch size
     batch_size = 100
     #
@@ -76,9 +75,11 @@ if __name__ == "__main__":
     optimizer = optim.SGD(net.parameters(), lr=0.1, momentum=0.9)
     scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 1e-2)
     best_score = -np.inf
-    if is_eval:
+if is_eval:
         score = evalation(testloader, net, criterion)
         print("Test score: ", score)
+        import os
+        os.exit(0)
 
     for epoch in range(start_epoch, epochs):
         print("Epoch:", epoch)
