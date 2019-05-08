@@ -36,6 +36,8 @@ if __name__ == "__main__":
     batch_size = 100
     # number of epochs
     epochs = 20
+    # L2 regularization weight / L2 penalty
+    l2_reg_weight = 5e-4
     # ================================================
     if resume or is_eval:
         # Load checkpoint.
@@ -45,8 +47,8 @@ if __name__ == "__main__":
     # cpu or gpu
     print("================================")
     print("Going to use deive : ", device)
+    print("Model role: ", role)
     print("================================")
-    # img_transform = get_img_tranformation()
     #
     if device == 'cuda':
         cudnn.benchmark = True
@@ -76,7 +78,8 @@ if __name__ == "__main__":
     if device == 'cuda':
         net.half()  # use half precision
 
-    optimizer = optim.SGD(net.parameters(), lr=0.1, momentum=0.9)
+    optimizer = optim.SGD(net.parameters(),
+        lr=0.05, momentum=0.9, weight_decay=l2_reg_weight)
     scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 1e-2)
     best_score = -np.inf
     if is_eval:
