@@ -20,9 +20,14 @@ class Vgg(nn.Module):
         self.features = self._make_layers(cfg[vgg_name])
         self.avgpool = nn.AvgPool2d(kernel_size=1, stride=1)
         self.classifier = nn.Linear(512, 10)
-
         #
         self._cross_entropy_loss_fn = nn.CrossEntropyLoss()
+        # He Initialization scheme
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                torch.nn.init.kaiming_normal_(m.weight.data)
+                m.bias.data.zero_()
+
 
     def forward(self, x):
         out = self.features(x)
@@ -31,16 +36,20 @@ class Vgg(nn.Module):
         out = self.classifier(out)
         return out
 
-    def _make_layers(self, cfg):
+    def _make_layers(self, cfg, batch_norm=False):
         layers = []
         in_channels = 3
         for x in cfg:
             if x == 'M':
                 layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
             else:
-                layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=1),
-                           nn.BatchNorm2d(x),
-                           nn.ReLU(inplace=True)]
+                # conv2d
+                layers.append(nn.Conv2d(in_channels, x, kernel_size=3, padding=1))
+                # Batch norm
+                if batch_norm:
+                    layers.append(nn.BatchNorm2d(x))
+                # relu
+                layers.append(nn.ReLU(inplace=True))
                 in_channels = x
         return nn.Sequential(*layers)
 
@@ -55,28 +64,36 @@ class VggStudent(Vgg):
     def __init__(self, vgg_name):
         super().__init__(vgg_name)
 
-    def _make_layers(self, cfg):
+    def _make_layers(self, cfg, batch_norm=False):
         layers = []
         in_channels = 3
         for x in cfg:
             if x == 'M':
                 # add back a conpensation convolution network to make block output
                 # consistent
-                layers += [
-                    nn.Conv2d(in_channels,
-                        in_channels*self.REDUCE_FACTOR, kernel_size=1, padding=0),
-                    nn.BatchNorm2d(in_channels*self.REDUCE_FACTOR),
-                    nn.ReLU(inplace=True)
-                ]
+                out_channels = in_channels*self.REDUCE_FACTOR
+                # conv2d
+                layers.append(
+                    nn.Conv2d(in_channels, out_channels,
+                    kernel_size=1, padding=0))
+                # Batch norm
+                if batch_norm:
+                    layers.append(nn.BatchNorm2d(out_channels))
+                # relu
+                layers.append(nn.ReLU(inplace=True))
 
                 layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
                 # adjust the next layer input channels
                 in_channels = in_channels*self.REDUCE_FACTOR
             else:
                 out_channels = x // self.REDUCE_FACTOR
-                layers += [nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
-                           nn.BatchNorm2d(out_channels),
-                           nn.ReLU(inplace=True)]
+                # conv2d
+                layers.append(nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1))
+                # Batch norm
+                if batch_norm:
+                    layers.append(nn.BatchNorm2d(out_channels))
+                # relu
+                layers.append(nn.ReLU(inplace=True))
                 in_channels = out_channels
         return nn.Sequential(*layers)
 
