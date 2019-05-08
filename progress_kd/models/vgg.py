@@ -14,7 +14,7 @@ cfg = {
 
 
 class Vgg(nn.Module):
-    def __init__(self, vgg_name):
+    def __init__(self, vgg_name, n_classes=10):
         super().__init__()
         self.vgg_name = vgg_name
         self.features = self._make_layers(cfg[vgg_name])
@@ -25,7 +25,7 @@ class Vgg(nn.Module):
             nn.Dropout(),
             nn.Linear(512, 512),
             nn.ReLU(True),
-            nn.Linear(512, 10),
+            nn.Linear(512, n_classes),
         )
         #
         self._cross_entropy_loss_fn = nn.CrossEntropyLoss()
@@ -34,6 +34,9 @@ class Vgg(nn.Module):
             if isinstance(m, nn.Conv2d):
                 torch.nn.init.kaiming_normal_(m.weight.data)
                 m.bias.data.zero_()
+            elif isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.01)
+                nn.init.constant_(m.bias, 0)
 
 
     def forward(self, x):

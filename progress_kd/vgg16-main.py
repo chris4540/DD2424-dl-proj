@@ -35,9 +35,10 @@ if __name__ == "__main__":
     # batch size
     batch_size = 100
     # number of epochs
-    epochs = 20
+    epochs = 300
     # L2 regularization weight / L2 penalty
     l2_reg_weight = 5e-4
+    lr = 0.05
     # ================================================
     if resume or is_eval:
         # Load checkpoint.
@@ -79,8 +80,9 @@ if __name__ == "__main__":
         net.half()  # use half precision
 
     optimizer = optim.SGD(net.parameters(),
-        lr=0.05, momentum=0.9, weight_decay=l2_reg_weight)
-    scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 1e-2)
+        lr=lr, momentum=0.9, weight_decay=l2_reg_weight)
+    # scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 1e-2, mode='triangular2')
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.5)
     best_score = -np.inf
     if is_eval:
         print("Evaluating the model with the test set")
