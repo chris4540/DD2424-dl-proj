@@ -23,7 +23,7 @@ def get_optimizer(model):
 if __name__ == "__main__":
 
     batch_size = 100
-    epochs = 5
+    epochs = 10
     # ==============================================
     teacher = Vgg('VGG16')
     chkpt = torch.load("vgg_16_teacher_chkpt.tar")
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     trainloader, validloader = get_train_valid_cifar10_dataloader('../../data', batch_size)
     for phase_idx in range(1, 6):
         print("phase: ", phase_idx)
-        print("Making aux {} network...", phase_idx)
+        print("Making aux {} network...".format(phase_idx))
         student = AuxiliaryVgg(teacher, phase_idx)
         student.to(device)
         if device == 'cuda':
@@ -61,4 +61,8 @@ if __name__ == "__main__":
                     'validation_score': valid_score
                 }
                 torch.save(saving_dict, 'aux{}_chkpt.tar'.format(phase_idx))
+            if valid_score > 0.98:
+                break
 
+        # update teacher
+        teacher = student

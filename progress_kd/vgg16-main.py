@@ -64,9 +64,9 @@ if __name__ == "__main__":
         testloader = get_test_cifar10_dataloader('../../data', batch_size)
     ###########################################################################
     if role == "teacher":
-        net = VGG("VGG16")
+        net = Vgg("VGG16")
     else:
-        net = VGGStudent("VGG16")
+        net = VggStudent("VGG16")
 
     if checkpoint:
         net.load_state_dict(checkpoint['state_dict'])
