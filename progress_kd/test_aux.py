@@ -1,6 +1,6 @@
 import torch
-from models.vgg import AuxiliaryVgg
 from models.vgg import Vgg
+from models.vgg_aux import AuxiliaryVgg
 
 if __name__ == "__main__":
     teacher = Vgg('VGG16')
