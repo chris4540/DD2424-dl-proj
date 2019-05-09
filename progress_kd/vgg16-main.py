@@ -108,8 +108,7 @@ if __name__ == "__main__":
         lr=lr, momentum=0.9, weight_decay=l2_reg_weight)
     # calculate step size
     step_size = 2*np.int(np.floor(len(trainloader)/batch_size))
-    scheduler = optim.lr_scheduler.CyclicLR(
-        optimizer, 1e-5, 5e-2, step_size_up=step_size,  mode='triangular2')
+    scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 5e-2, step_size_up=step_size)
     # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.5)
     best_score = -np.inf
 
