@@ -14,21 +14,22 @@ class Vgg(nn.Module):
         super().__init__()
         self.vgg_name = vgg_name
         self.features = self._make_layers(cfg[vgg_name], batch_norm)
+        self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
         self.classifier = nn.Sequential(
-            nn.Dropout(),
-            nn.Linear(512, 512),
+            nn.Linear(512*7*7, 4096),
             nn.ReLU(True),
             nn.Dropout(),
-            nn.Linear(512, 512),
+            nn.Linear(4096, 4096),
             nn.ReLU(True),
-            nn.Linear(512, n_classes),
+            nn.Dropout(),
+            nn.Linear(4096, n_classes),
         )
         #
         self._cross_entropy_loss_fn = nn.CrossEntropyLoss()
         # He Initialization scheme
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                torch.nn.init.kaiming_normal_(m.weight.data)
+                torch.nn.init.kaiming_normal_(m.weight.data, nonlinearity='relu')
                 m.bias.data.zero_()
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1)
