@@ -30,6 +30,9 @@ class Vgg(nn.Module):
             if isinstance(m, nn.Conv2d):
                 torch.nn.init.kaiming_normal_(m.weight.data)
                 m.bias.data.zero_()
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
             elif isinstance(m, nn.Linear):
                 nn.init.normal_(m.weight, 0, 0.01)
                 nn.init.constant_(m.bias, 0)
@@ -37,7 +40,6 @@ class Vgg(nn.Module):
 
     def forward(self, x):
         out = self.features(x)
-        # out = self.avgpool(out)
         out = out.view(out.size(0), -1)
         out = self.classifier(out)
         return out
