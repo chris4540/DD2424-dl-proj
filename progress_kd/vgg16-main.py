@@ -97,19 +97,21 @@ if __name__ == "__main__":
     if device == 'cuda':
         net.half()  # use half precision
 
-    optimizer = optim.SGD(net.parameters(),
-        lr=lr, momentum=0.9, weight_decay=l2_reg_weight)
-    # calculate step size
-    step_size = 2*np.int(np.floor(len(trainloader)/batch_size))
-    scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 1e-2, step_size_up=step_size)
-    # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.5)
-    best_score = -np.inf
     if is_eval:
         print("Evaluating the model with the test set")
         score = evalation(testloader, net, device)
         print("Test score: ", score)
         import sys
         sys.exit(0)
+
+    optimizer = optim.SGD(net.parameters(),
+        lr=lr, momentum=0.9, weight_decay=l2_reg_weight)
+    # calculate step size
+    step_size = 2*np.int(np.floor(len(trainloader)/batch_size))
+    scheduler = optim.lr_scheduler.CyclicLR(
+        optimizer, 1e-5, 1e-2, step_size_up=step_size,  mode='triangular2')
+    # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.5)
+    best_score = -np.inf
 
     for epoch in range(start_epoch, epochs):
         print("Epoch:", epoch)
