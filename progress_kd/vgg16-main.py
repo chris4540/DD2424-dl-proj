@@ -22,25 +22,38 @@ from utils import train
 from utils import get_img_tranformation
 from utils.load_data import get_train_valid_cifar10_dataloader
 from utils.load_data import get_test_cifar10_dataloader
+import argparse
 
 if __name__ == "__main__":
-    # =============================================================
+    # arg parse
+    parser = argparse.ArgumentParser(description='Base line network training')
+    parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
+    parser.add_argument('--evaluate', '-e', action='store_true', help='eval')
+    parser.add_argument('--role', type=str, choices=['teacher', 'student'], help='role of the network')
+    parser.add_argument('--batchnorm', '-bn', action='store_true', help='if batch normalziation')
+    args = parser.parse_args()
+    is_resume = args.resume
+    is_eval = args.evaluate
+    is_batchnorm = args.batchnorm
+    role = args.role
+    if is_batchnorm:
+        model_name = 'vgg16bn'
+    else:
+        model_name = 'vgg16'
+    # ================================================================
     # Settings
-    role = "teacher"
-    chk_pt_file = './vgg_16_{}_chkpt.tar'.format(role)
+    chk_pt_file = './{}_{}_chkpt.tar'.format(model_name, role)
     checkpoint = None
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    resume = False
-    is_eval = False
     # batch size
     batch_size = 100
     # number of epochs
-    epochs = 300
+    epochs = 10
     # L2 regularization weight / L2 penalty
     l2_reg_weight = 5e-4
     lr = 0.05
     # ================================================
-    if resume or is_eval:
+    if is_resume or is_eval:
         # Load checkpoint.
         print('Loading check point file')
         checkpoint = torch.load(chk_pt_file)
@@ -81,8 +94,8 @@ if __name__ == "__main__":
 
     optimizer = optim.SGD(net.parameters(),
         lr=lr, momentum=0.9, weight_decay=l2_reg_weight)
-    # scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 1e-2, mode='triangular2')
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.5)
+    scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 1e-2, mode='triangular2')
+    # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.5)
     best_score = -np.inf
     if is_eval:
         print("Evaluating the model with the test set")
