@@ -14,10 +14,10 @@ cfg = {
 
 
 class Vgg(nn.Module):
-    def __init__(self, vgg_name, n_classes=10):
+    def __init__(self, vgg_name, batch_norm=False, n_classes=10):
         super().__init__()
         self.vgg_name = vgg_name
-        self.features = self._make_layers(cfg[vgg_name])
+        self.features = self._make_layers(cfg[vgg_name], batch_norm)
         self.classifier = nn.Sequential(
             nn.Dropout(),
             nn.Linear(512, 512),
@@ -46,7 +46,7 @@ class Vgg(nn.Module):
         out = self.classifier(out)
         return out
 
-    def _make_layers(self, cfg, batch_norm=False):
+    def _make_layers(self, cfg, batch_norm):
         layers = []
         in_channels = 3
         for x in cfg:
@@ -74,7 +74,7 @@ class VggStudent(Vgg):
     def __init__(self, vgg_name):
         super().__init__(vgg_name)
 
-    def _make_layers(self, cfg, batch_norm=False):
+    def _make_layers(self, cfg, batch_norm):
         layers = []
         in_channels = 3
         for x in cfg:

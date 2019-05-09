@@ -1,3 +1,6 @@
+"""
+TODO: copy layer instead of build a new layers
+"""
 import torch
 import torch.nn as nn
 from models.vgg import cfg as vgg_cfg
