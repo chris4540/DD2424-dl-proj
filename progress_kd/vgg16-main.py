@@ -28,6 +28,9 @@ from utils.load_data import get_train_valid_cifar10_dataloader
 from utils.load_data import get_test_cifar10_dataloader
 import argparse
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+if device == 'cuda':
+    cudnn.benchmark = True
 if __name__ == "__main__":
     # arg parse
     parser = argparse.ArgumentParser(description='Base line network training')
@@ -50,7 +53,6 @@ if __name__ == "__main__":
     # Settings
     chk_pt_file = './{}_{}_chkpt.tar'.format(model_name, role)
     checkpoint = None
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     # batch size
     batch_size = 100
     # L2 regularization weight / L2 penalty
@@ -66,10 +68,9 @@ if __name__ == "__main__":
     print("================================")
     print("Going to use deive : ", device)
     print("Model role: ", role)
+    print("Model name: ", model_name)
+    print("Check point file: ", chk_pt_file)
     print("================================")
-    #
-    if device == 'cuda':
-        cudnn.benchmark = True
     #
     if checkpoint:
         start_epoch = checkpoint['epoch']
