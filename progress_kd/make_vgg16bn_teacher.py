@@ -1,5 +1,5 @@
 """
-Prepare teacher
+Prepare VGG16 teacher with batch normalization
 """
 import torch
 import torch.nn as nn
@@ -17,12 +17,13 @@ if device == 'cuda':
 #
 
 if __name__ == "__main__":
+    num_classes = 10
+    nepochs = 20
+    teacher_model_file = "vgg16bn_teacher.tar"
+    # ===============================================================
     teacher = models.vgg16_bn(pretrained=True)
     teacher.get_loss = nn.CrossEntropyLoss()
-    num_classes = 10
-    chk_pt_file = "vgg16bn_teacher.tar"
 
-    # teacher.classifier[3] = nn.Linear(num_ftrs, num_classes)
     num_ftrs = teacher.classifier[6].in_features
     last_layer = nn.Linear(num_ftrs, num_classes)
     torch.nn.init.kaiming_normal_(last_layer.weight.data)
@@ -42,7 +43,7 @@ if __name__ == "__main__":
     # ======================================================
     trainloader, validloader = get_train_valid_cifar10_dataloader('../../data', batch_size=100)
     best_score = -np.inf
-    for epoch in range(0, 10):
+    for epoch in range(0, nepochs):
         print("Epoch:", epoch)
         # train for one epoch
         train(trainloader, teacher, optimizer, scheduler, device)
@@ -51,10 +52,13 @@ if __name__ == "__main__":
         valid_score = evalation(validloader, teacher, device)
         print("Validation Score: ", valid_score)
         if valid_score > best_score:
-            best_score = max(valid_score, best_score)
+            # update the score
+            best_score = valid_score
+
             saving_dict = {
                 'epoch': epoch+1,
                 'state_dict': teacher.state_dict(),
                 'validation_score': valid_score
             }
-            torch.save(saving_dict, chk_pt_file)
+            # save when the performance is better
+            torch.save(saving_dict, teacher_model_file)
