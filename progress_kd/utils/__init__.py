@@ -112,7 +112,5 @@ def train(train_loader, model, optimizer, scheduler, device="cuda"):
     train_loss = train_loss / len(train_loader)
     acc = 100 * correct / total
     used_time = time.time() - start_time
-    print("=====================================================")
-    print('Time used: %d \t Loss: %.3f | Acc: %.3f%% (%d/%d)' %
+    print('Train Time used: %d \t Loss: %.3f | Train Acc: %.3f%% (%d/%d)' %
         (used_time, train_loss, acc, correct, total))
-    print("=====================================================")

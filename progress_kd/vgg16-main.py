@@ -6,6 +6,10 @@ For running on colab, use the following code
 from google.colab import drive
 drive.mount('/content/drive/')  # mount google drive
 cd /content/drive/My\ Drive/StudyInKTH/DD2424-DL/pytorch-cifar
+
+TODO:
+    1. code comment
+    2. tidy up descriptions of the arg parser
 """
 from models.vgg import VggStudent
 from models.vgg import Vgg
@@ -31,6 +35,7 @@ if __name__ == "__main__":
     parser.add_argument('--evaluate', '-e', action='store_true', help='eval')
     parser.add_argument('--role', type=str, choices=['teacher', 'student'], help='role of the network')
     parser.add_argument('--batchnorm', '-bn', action='store_true', help='if batch normalziation')
+    parser.add_argument('--epochs', default=30, type=int, help='number of total epochs to run')
     args = parser.parse_args()
     is_resume = args.resume
     is_eval = args.evaluate
@@ -40,6 +45,7 @@ if __name__ == "__main__":
         model_name = 'vgg16bn'
     else:
         model_name = 'vgg16'
+    epochs = args.epochs
     # ================================================================
     # Settings
     chk_pt_file = './{}_{}_chkpt.tar'.format(model_name, role)
@@ -47,8 +53,6 @@ if __name__ == "__main__":
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     # batch size
     batch_size = 100
-    # number of epochs
-    epochs = 10
     # L2 regularization weight / L2 penalty
     l2_reg_weight = 5e-4
     lr = 0.05
@@ -80,9 +84,9 @@ if __name__ == "__main__":
         testloader = get_test_cifar10_dataloader('../../data', batch_size)
     ###########################################################################
     if role == "teacher":
-        net = Vgg("VGG16")
+        net = Vgg("VGG16", batch_norm=is_batchnorm)
     else:
-        net = VggStudent("VGG16")
+        net = VggStudent("VGG16", batch_norm=is_batchnorm)
 
     if checkpoint:
         net.load_state_dict(checkpoint['state_dict'])

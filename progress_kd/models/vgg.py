@@ -4,11 +4,7 @@ import torch.nn as nn
 
 
 cfg = {
-    # 'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    # 'VGG13': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    # 'VGG16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
     'VGG16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
-    # 'VGG19': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
 }
 
 
@@ -71,8 +67,8 @@ class VggStudent(Vgg):
 
     REDUCE_FACTOR = 2
 
-    def __init__(self, vgg_name):
-        super().__init__(vgg_name)
+    def __init__(self, vgg_name, batch_norm=False, n_classes=10):
+        super().__init__(vgg_name, batch_norm, n_classes)
 
     def _make_layers(self, cfg, batch_norm):
         layers = []
@@ -107,19 +103,3 @@ class VggStudent(Vgg):
                 in_channels = out_channels
         return nn.Sequential(*layers)
 
-
-if __name__ == "__main__":
-    teacher = Vgg('VGG16')
-    student = VggStudent('VGG16')
-    x = torch.randn(2,3,32,32)
-    y1 = teacher(x)
-    y2 = student(x)
-    assert y1.shape == y2.shape
-
-    def get_sum_params(model):
-        ret = 0
-        for p in model.parameters():
-            ret += p.numel()
-        return ret
-    print("# of params in teacher submodel:", get_sum_params(teacher))
-    print("# of params in student submodel:", get_sum_params(student))
