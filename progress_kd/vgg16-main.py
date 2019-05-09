@@ -89,8 +89,12 @@ if __name__ == "__main__":
     else:
         net = VggStudent("VGG16", batch_norm=is_batchnorm)
 
+    optimizer = optim.SGD(net.parameters(),
+        lr=lr, momentum=0.9, weight_decay=l2_reg_weight)
+
     if checkpoint:
         net.load_state_dict(checkpoint['state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
 
     net = net.to(device)
 
@@ -104,8 +108,6 @@ if __name__ == "__main__":
         import sys
         sys.exit(0)
 
-    optimizer = optim.SGD(net.parameters(),
-        lr=lr, momentum=0.9, weight_decay=l2_reg_weight)
     # calculate step size
     step_size = 2*np.int(np.floor(len(trainloader)/batch_size))
     scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 5e-2, step_size_up=step_size)
@@ -126,6 +128,7 @@ if __name__ == "__main__":
             saving_dict = {
                 'epoch': epoch+1,
                 'state_dict': net.state_dict(),
-                'validation_score': valid_score
+                'optimizer': optimizer.state_dict(),
+                'validation_score': valid_score,
             }
             torch.save(saving_dict, chk_pt_file)
