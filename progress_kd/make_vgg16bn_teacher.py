@@ -25,12 +25,13 @@ if __name__ == "__main__":
     # ===============================================================
     teacher = models.vgg16_bn(pretrained=True)
     teacher.get_loss = nn.CrossEntropyLoss()
-
-    num_ftrs = teacher.classifier[6].in_features
-    last_layer = nn.Linear(num_ftrs, num_classes)
-    torch.nn.init.kaiming_normal_(last_layer.weight.data)
-    last_layer.bias.data.zero_()
-    teacher.classifier[6] = last_layer
+    teacher.avgpool = nn.Identity()
+    teacher.classifier = nn.Linear(512, 10)
+    # num_ftrs = teacher.classifier[6].in_features
+    # last_layer = nn.Linear(num_ftrs, num_classes)
+    # torch.nn.init.kaiming_normal_(last_layer.weight.data)
+    # last_layer.bias.data.zero_()
+    # teacher.classifier[6] = last_layer
 
     teacher.to(device)
     if device == 'cuda':
@@ -41,7 +42,6 @@ if __name__ == "__main__":
     optimizer = optim.SGD(teacher.parameters(),
         lr=0.05, momentum=0.9, weight_decay=l2_reg_weight)
     scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 1e-2)
-    # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
     # ======================================================
     trainloader, validloader = get_train_valid_cifar10_dataloader('../../data', batch_size)
     best_score = -np.inf
