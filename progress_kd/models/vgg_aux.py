@@ -49,7 +49,7 @@ class AuxiliaryVgg(nn.Module):
         self._defreeze_target_block()
 
         # He Initialization scheme
-        for m in  self.modules():
+        for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 # initialize weigting
                 if m.weight.requires_grad:

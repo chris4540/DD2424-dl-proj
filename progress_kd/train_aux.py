@@ -54,15 +54,15 @@ if __name__ == "__main__":
             print("Validation Score: ", valid_score)
 
             if valid_score > best_score:
-                best_score = max(valid_score, best_score)
+                best_score = valid_score
+                best_model_state_dict = student.state_dict()
                 saving_dict = {
                     'epoch': epoch+1,
-                    'state_dict': student.state_dict(),
+                    'state_dict': best_model_state_dict,
                     'validation_score': valid_score
                 }
                 torch.save(saving_dict, 'aux{}_chkpt.tar'.format(phase_idx))
-            if valid_score > 0.98:
-                break
 
-        # update teacher
+        # update teacher with the best parameters
         teacher = student
+        teacher.load_state_dict(best_model_state_dict)
