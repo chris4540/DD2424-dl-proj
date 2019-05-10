@@ -71,16 +71,15 @@ class Vgg(nn.Module):
         super().__init__()
         self.vgg_name = vgg_name
         self.features = self._make_layers(cfg[vgg_name], batch_norm)
-        self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
         self.classifier = nn.Sequential(
-            nn.Linear(512*7*7, 4096),
+            nn.Dropout(),
+            nn.Linear(512, 512),
             nn.ReLU(True),
             nn.Dropout(),
-            nn.Linear(4096, 4096),
+            nn.Linear(512, 512),
             nn.ReLU(True),
-            nn.Dropout(),
-            nn.Linear(4096, n_classes),
-        )
+            nn.Linear(512, 10),
+    )
         #
         self._cross_entropy_loss_fn = nn.CrossEntropyLoss()
         # He Initialization scheme
@@ -98,7 +97,6 @@ class Vgg(nn.Module):
 
     def forward(self, x):
         out = self.features(x)
-        out = self.avgpool(out)
         out = out.view(out.size(0), -1)
         out = self.classifier(out)
         return out

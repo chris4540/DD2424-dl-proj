@@ -73,7 +73,7 @@ class AuxiliaryVgg(nn.Module):
                 self.features[i] = teacher.features[j]
 
         # copy avgpool
-        self.avgpool = teacher.avgpool
+        # self.avgpool = teacher.avgpool
         # copy classification layers
         self.classifier = teacher.classifier
 
@@ -101,7 +101,7 @@ class AuxiliaryVgg(nn.Module):
         # apply forwarding from 0 to _intercept_layer_idx and store it
         self.student_blk_output = self.features[:self._intercept_layer_idx](x)
         out = self.features[self._intercept_layer_idx:](self.student_blk_output)
-        out = self.avgpool(out)
+        # out = self.avgpool(out)
         out = out.view(out.size(0), -1) # reshape the output
         out = self.classifier(out)
 

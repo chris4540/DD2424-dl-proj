@@ -26,12 +26,20 @@ if __name__ == "__main__":
     teacher = models.vgg16_bn(pretrained=True)
     teacher.get_loss = nn.CrossEntropyLoss()
     teacher.avgpool = nn.Identity()
-    teacher.classifier = nn.Linear(512, 10)
-    # num_ftrs = teacher.classifier[6].in_features
-    # last_layer = nn.Linear(num_ftrs, num_classes)
-    # torch.nn.init.kaiming_normal_(last_layer.weight.data)
-    # last_layer.bias.data.zero_()
-    # teacher.classifier[6] = last_layer
+    classifier = nn.Sequential(
+            nn.Dropout(),
+            nn.Linear(512, 512),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(512, 512),
+            nn.ReLU(True),
+            nn.Linear(512, 10),
+    )
+    for m in classifier.modules():
+        if isinstance(m, nn.Linear):
+            nn.init.normal_(m.weight, 0, 0.01)
+            nn.init.constant_(m.bias, 0)
+    teacher.classifier = classifier
 
     teacher.to(device)
     if device == 'cuda':
