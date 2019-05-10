@@ -4,15 +4,16 @@ TODO: copy layer instead of build a new layers
 import torch
 import torch.nn as nn
 from models.vgg import cfg as vgg_cfg
+from models.vgg import make_student_layers
+from models.vgg import make_layers
 
 class AuxiliaryVgg(nn.Module):
     """
     The auxiliary function
     """
-    REDUCE_FACTOR = 2
-
-    def __init__(self, teacher_model, phase_idx, alpha=0.1):
+    def __init__(self, teacher_model, phase_idx, batch_norm=False, reduce_factor=2, alpha=0.1):
         assert phase_idx > 0
+
         super().__init__()
         assert isinstance(teacher_model, nn.Module)
 
@@ -23,13 +24,12 @@ class AuxiliaryVgg(nn.Module):
 
         self.vgg_name = teacher_model.vgg_name
         self.phase_idx = phase_idx
+        self.reduce_factor = reduce_factor
 
         # ================================================================
         # build the network
-        self.avgpool = nn.AvgPool2d(kernel_size=1, stride=1)
-        self.classifier = nn.Linear(512, 10)
         # build the features
-        self._build_features(vgg_cfg[self.vgg_name])
+        self._build_features(vgg_cfg[self.vgg_name], batch_norm)
         # ===========================================================
         # ===========================================================
         # obtain the block indices
@@ -72,6 +72,8 @@ class AuxiliaryVgg(nn.Module):
                 # TODO: think of transfering values, check if all in cpu
                 self.features[i] = teacher.features[j]
 
+        # copy avgpool
+        self.avgpool = teacher.avgpool
         # copy classification layers
         self.classifier = teacher.classifier
 
@@ -124,6 +126,8 @@ class AuxiliaryVgg(nn.Module):
         diff = diff.view(diff.size(0), -1)  # flatten
         local_loss = torch.norm(diff, p='fro', dim=1)
         batch_local_loss = torch.mean(local_loss)
+
+        # sum the total loss
         ret = self._cross_entropy_loss_fn(outputs, labels) + self.alpha*batch_local_loss
         return ret
 
@@ -138,7 +142,6 @@ class AuxiliaryVgg(nn.Module):
 
     def _defreeze_target_block(self):
         if self.phase_idx == 0:
-            # this is the teacher network, nothing to defreeze
             return
         # =====================================
         # consider the block start index and end index
@@ -154,54 +157,54 @@ class AuxiliaryVgg(nn.Module):
         for param in self.parameters():
             param.requires_grad = False
 
-    def _build_features(self, cfg):
+    def _build_features(self, cfg, batch_norm):
         # get the block-wise configuration
         student_cfg, teacher_cfg = self._splite_cfg(cfg, self.phase_idx)
+        student_layers, channels = make_student_layers(
+            student_cfg, batch_norm, self.reduce_factor, input_channels=3)
 
-        student_layers, channels = self._make_student_layers(student_cfg, 3)
-
-        teacher_layers = self._make_teacher_layers(teacher_cfg, channels)
+        teacher_layers = make_layers(teacher_cfg, batch_norm, input_channels=channels)
 
         # set-up the features
         self.features = nn.Sequential(*student_layers, *teacher_layers)
 
-    @staticmethod
-    def _make_teacher_layers(cfg, in_channels):
-        layers = []
-        channels = in_channels
-        for x in cfg:
-            if x == 'M':
-                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
-            else:
-                layers += [nn.Conv2d(channels, x, kernel_size=3, padding=1),
-                           nn.BatchNorm2d(x),
-                           nn.ReLU(inplace=True)]
-                channels = x
-        return layers
+    # @staticmethod
+    # def _make_teacher_layers(cfg, in_channels):
+    #     layers = []
+    #     channels = in_channels
+    #     for x in cfg:
+    #         if x == 'M':
+    #             layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+    #         else:
+    #             layers += [nn.Conv2d(channels, x, kernel_size=3, padding=1),
+    #                        nn.BatchNorm2d(x),
+    #                        nn.ReLU(inplace=True)]
+    #             channels = x
+    #     return layers
 
-    def _make_student_layers(self, cfg, in_channels):
-        layers = []
-        channels = in_channels
-        for x in cfg:
-            if x == 'M':
-                # add back a conpensation convolution network to make block output
-                # consistent
-                layers += [
-                    nn.Conv2d(channels, channels*self.REDUCE_FACTOR, kernel_size=1,
-                              padding=0),
-                    nn.BatchNorm2d(channels*self.REDUCE_FACTOR),
-                    nn.ReLU(inplace=True)
-                ]
-                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
-                # adjust the next layer input channels
-                channels = channels*self.REDUCE_FACTOR
-            else:
-                out_channels = x // self.REDUCE_FACTOR
-                layers += [nn.Conv2d(channels, out_channels, kernel_size=3, padding=1),
-                           nn.BatchNorm2d(out_channels),
-                           nn.ReLU(inplace=True)]
-                channels = out_channels
-        return layers, channels
+    # def _make_student_layers(self, cfg, in_channels):
+    #     layers = []
+    #     channels = in_channels
+    #     for x in cfg:
+    #         if x == 'M':
+    #             # add back a conpensation convolution network to make block output
+    #             # consistent
+    #             layers += [
+    #                 nn.Conv2d(channels, channels*self.REDUCE_FACTOR, kernel_size=1,
+    #                           padding=0),
+    #                 nn.BatchNorm2d(channels*self.REDUCE_FACTOR),
+    #                 nn.ReLU(inplace=True)
+    #             ]
+    #             layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+    #             # adjust the next layer input channels
+    #             channels = channels*self.REDUCE_FACTOR
+    #         else:
+    #             out_channels = x // self.REDUCE_FACTOR
+    #             layers += [nn.Conv2d(channels, out_channels, kernel_size=3, padding=1),
+    #                        nn.BatchNorm2d(out_channels),
+    #                        nn.ReLU(inplace=True)]
+    #             channels = out_channels
+    #     return layers, channels
 
     @staticmethod
     def _splite_cfg(cfg, k=0):
