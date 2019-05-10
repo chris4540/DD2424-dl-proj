@@ -2,13 +2,18 @@ import torch
 import torch.optim as optim
 from models.vgg import Vgg
 from models.vgg_aux import AuxiliaryVgg
+import torch.backends.cudnn as cudnn
 from utils import train
 from utils import evalation
 from utils.load_data import get_train_valid_cifar10_dataloader
 from utils.load_data import get_test_cifar10_dataloader
 import numpy as np
 
+#
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+if device == 'cuda':
+    cudnn.benchmark = True
+#
 
 def get_optimizer(model):
     params_to_update = []

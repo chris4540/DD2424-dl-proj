@@ -79,7 +79,7 @@ class Vgg(nn.Module):
             nn.Linear(512, 512),
             nn.ReLU(True),
             nn.Linear(512, 10),
-    )
+        )
         #
         self._cross_entropy_loss_fn = nn.CrossEntropyLoss()
         # He Initialization scheme
