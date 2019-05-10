@@ -1,7 +1,7 @@
 import torch
 import torch.optim as optim
 from models.vgg import Vgg
-from models.vgg import AuxiliaryVgg
+from models.vgg_aux import AuxiliaryVgg
 from utils import train
 from utils import evalation
 from utils.load_data import get_train_valid_cifar10_dataloader
@@ -23,10 +23,10 @@ def get_optimizer(model):
 if __name__ == "__main__":
 
     batch_size = 100
-    epochs = 10
+    epochs = 6
     # ==============================================
-    teacher = Vgg('VGG16')
-    chkpt = torch.load("vgg_16_teacher_chkpt.tar")
+    teacher = Vgg('VGG16', batch_norm=True)
+    chkpt = torch.load("vgg16bn_teacher.tar")
     teacher.load_state_dict(chkpt['state_dict'])
     teacher.to(device)
     if device == 'cuda':
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     for phase_idx in range(1, 6):
         print("phase: ", phase_idx)
         print("Making aux {} network...".format(phase_idx))
-        student = AuxiliaryVgg(teacher, phase_idx)
+        student = AuxiliaryVgg(teacher, phase_idx, batch_norm=True)
         student.to(device)
         if device == 'cuda':
             student.half()
