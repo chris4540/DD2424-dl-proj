@@ -22,7 +22,7 @@ def get_optimizer(model):
         if p.requires_grad:
             params_to_update.append(p)
             print(name)
-    optimizer = optim.SGD(params_to_update, lr=0.1, momentum=0.9)
+    optimizer = optim.SGD(params_to_update, lr=0.01, momentum=0.9, weight_decay=0.005)
     return optimizer
 
 if __name__ == "__main__":

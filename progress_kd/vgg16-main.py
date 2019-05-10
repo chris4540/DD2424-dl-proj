@@ -56,7 +56,7 @@ if __name__ == "__main__":
     # batch size
     batch_size = 100
     # L2 regularization weight / L2 penalty
-    l2_reg_weight = 5e-4
+    l2_reg_weight = 0.005
     lr = 0.05
     # ================================================
     if is_resume or is_eval:
