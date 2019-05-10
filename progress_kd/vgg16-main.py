@@ -31,6 +31,12 @@ import argparse
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 if device == 'cuda':
     cudnn.benchmark = True
+
+def run_test(testloader, net, device):
+    print("Evaluating the model with the test set")
+    score = evalation(testloader, net, device)
+    print("Test score: ", score)
+
 if __name__ == "__main__":
     # arg parse
     parser = argparse.ArgumentParser(description='Base line network training')
@@ -79,10 +85,9 @@ if __name__ == "__main__":
     # define the img trasformation
     ###########################################################################
     ## obtain the dataset
-    if not is_eval:
-        trainloader, validloader = get_train_valid_cifar10_dataloader('../../data', batch_size)
-    else:
-        testloader = get_test_cifar10_dataloader('../../data', batch_size)
+
+    trainloader, validloader = get_train_valid_cifar10_dataloader('../../data', batch_size)
+    testloader = get_test_cifar10_dataloader('../../data', batch_size)
     ###########################################################################
     if role == "teacher":
         net = Vgg("VGG16", batch_norm=is_batchnorm)
@@ -102,9 +107,7 @@ if __name__ == "__main__":
         net.half()  # use half precision
 
     if is_eval:
-        print("Evaluating the model with the test set")
-        score = evalation(testloader, net, device)
-        print("Test score: ", score)
+        run_test(testloader, net, device)
         import sys
         sys.exit(0)
 
@@ -132,3 +135,5 @@ if __name__ == "__main__":
                 'validation_score': valid_score,
             }
             torch.save(saving_dict, chk_pt_file)
+    # ====================================================================
+    run_test(testloader, net, device)

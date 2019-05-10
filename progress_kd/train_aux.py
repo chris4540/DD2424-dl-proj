@@ -39,6 +39,7 @@ if __name__ == "__main__":
 
     # =========================================================================
     trainloader, validloader = get_train_valid_cifar10_dataloader('../../data', batch_size)
+    step_size = 2*np.int(np.floor(len(trainloader)/batch_size))
     for phase_idx in range(1, 6):
         print("phase: ", phase_idx)
         print("Making aux {} network...".format(phase_idx))
@@ -47,7 +48,7 @@ if __name__ == "__main__":
         if device == 'cuda':
             student.half()
         optimizer = get_optimizer(student)
-        scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 1e-2)
+        scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 5e-2, step_size_up=step_size)
         best_score = -np.inf
         for epoch in range(0, epochs):
             print("Epoch:", epoch)
