@@ -55,4 +55,4 @@ if __name__ == "__main__":
         'batch_size': 100,
         'logits': logits
     }
-    torch.save(data, 'teacher_logists_{}.tar'.format(batch_size))
+    torch.save(data, 'teacher_logits_{}.tar'.format(batch_size))
