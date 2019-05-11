@@ -22,13 +22,13 @@ def get_optimizer(model):
         if p.requires_grad:
             params_to_update.append(p)
             print(name)
-    optimizer = optim.SGD(params_to_update, lr=0.01, momentum=0.9, weight_decay=0.005)
+    optimizer = optim.SGD(params_to_update, lr=0.01, momentum=0.9, weight_decay=5e-4)
     return optimizer
 
 if __name__ == "__main__":
 
     batch_size = 100
-    epochs = 6
+    epochs = 20
     # ==============================================
     teacher = Vgg('VGG16', batch_norm=True)
     chkpt = torch.load("vgg16bn_teacher.tar")
@@ -39,16 +39,17 @@ if __name__ == "__main__":
 
     # =========================================================================
     trainloader, validloader = get_train_valid_cifar10_dataloader('../../data', batch_size)
+    testloader = get_test_cifar10_dataloader('../../data', batch_size)
     step_size = 2*np.int(np.floor(len(trainloader)/batch_size))
     for phase_idx in range(1, 6):
         print("phase: ", phase_idx)
         print("Making aux {} network...".format(phase_idx))
-        student = AuxiliaryVgg(teacher, phase_idx, batch_norm=True)
+        student = AuxiliaryVgg(teacher, phase_idx, batch_norm=True, alpha=0.3)
         student.to(device)
         if device == 'cuda':
             student.half()
         optimizer = get_optimizer(student)
-        scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 5e-2, step_size_up=step_size)
+        scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 1e-2, step_size_up=step_size)
         best_score = -np.inf
         for epoch in range(0, epochs):
             print("Epoch:", epoch)
@@ -69,6 +70,9 @@ if __name__ == "__main__":
                 }
                 torch.save(saving_dict, 'aux{}_chkpt.tar'.format(phase_idx))
 
+        # test
         # update teacher with the best parameters
+        student.load_state_dict(best_model_state_dict)
         teacher = student
-        teacher.load_state_dict(best_model_state_dict)
+        score = evalation(testloader, student, device)
+        print("The test accurancy/score of phase {} is : {}".format(phase_idx, score))
