@@ -6,6 +6,10 @@ import torch.nn as nn
 import time
 import torchvision.transforms as transforms
 import sys
+import torch.optim
+import torch.optim.lr_scheduler
+from torch.optim.lr_scheduler import CyclicLR
+from torch.optim.lr_scheduler import StepLR
 
 def progressbar(it, prefix="", size=40, file=sys.stdout):
     """
@@ -72,6 +76,8 @@ def train(train_loader, model, optimizer, scheduler, device="cuda"):
     """
     Run one train epoch
     """
+    if not isinstance(scheduler, (StepLR, CyclicLR)):
+        raise ValueError("Wrong type of input scheduler")
 
     # switch to train mode
     model.train()
@@ -105,7 +111,11 @@ def train(train_loader, model, optimizer, scheduler, device="cuda"):
         _, predicted = output.max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
-        # update the learning rate
+        # update the learning rate if cyclic scheme
+        if isinstance(scheduler, CyclicLR):
+            scheduler.step()
+
+    if isinstance(scheduler, StepLR):
         scheduler.step()
 
     # print statistics
