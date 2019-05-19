@@ -45,13 +45,15 @@ if __name__ == "__main__":
     if device == 'cuda':
         teacher.half()  # use half precision
     # ===========================================================
-    # set optimizer and learning rate scheduler
+    # set optimizer
     l2_reg_weight = 5e-4
     optimizer = optim.SGD(teacher.parameters(),
         lr=0.05, momentum=0.9, weight_decay=l2_reg_weight)
-    scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 1e-2)
     # ======================================================
     trainloader, validloader = get_train_valid_cifar10_dataloader('../../data', batch_size)
+    # set learning rate scheduler
+    step_size = 2*np.int(np.floor(len(trainloader)/batch_size))
+    scheduler = optim.lr_scheduler.CyclicLR(optimizer, 1e-5, 1e-2, step_size_up=step_size)
     best_score = -np.inf
     for epoch in range(0, nepochs):
         print("Epoch:", epoch)
