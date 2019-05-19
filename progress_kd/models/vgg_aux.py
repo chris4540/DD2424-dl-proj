@@ -108,24 +108,12 @@ class AuxiliaryVgg(nn.Module):
         return out
 
     def get_loss(self, outputs, labels):
-        """
-        Compute the cross entropy loss given outputs and labels.
-        Args:
-            outputs: (Variable) dimension batch_size x 6 - output of the model
-            labels: (Variable) dimension batch_size, where each element is a value in [0, 1, 2, 3, 4, 5]
-        Returns:
-            loss (Variable): cross entropy loss for all images in the batch
-        Note:
-            you may use a standard loss function from
-            http://pytorch.org/docs/master/nn.html#loss-functions.
-            This example
-            demonstrates how you can easily define a custom loss function.
-        """
         # calculate the local loss
         diff = self.teacher_blk_output - self.student_blk_output
         diff = diff.view(diff.size(0), -1)  # flatten
         local_loss = torch.norm(diff, p='fro', dim=1)
         batch_local_loss = torch.mean(local_loss)
+        batch_local_loss = 0.5 * batch_local_loss**2
 
         # sum the total loss
         ret = self._cross_entropy_loss_fn(outputs, labels) + self.alpha*batch_local_loss
