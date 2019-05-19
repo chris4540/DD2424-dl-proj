@@ -1,0 +1,347 @@
+phase:  1
+Making aux 1 network...
+Params to be updated
+features.0.weight
+features.0.bias
+features.1.weight
+features.1.bias
+features.3.weight
+features.3.bias
+features.4.weight
+features.4.bias
+features.6.weight
+features.6.bias
+features.7.weight
+features.7.bias
+Epoch: 0
+
+Train Time used: 14 	 Loss: 4.594 | Train Acc: 87.267% (43197/49500)
+
+Validation Score:  0.862
+Epoch: 1
+
+Train Time used: 14 	 Loss: 2.137 | Train Acc: 96.832% (47932/49500)
+
+Validation Score:  0.884
+Epoch: 2
+
+Train Time used: 14 	 Loss: 1.696 | Train Acc: 97.782% (48402/49500)
+
+Validation Score:  0.882
+Epoch: 3
+
+Train Time used: 13 	 Loss: 1.517 | Train Acc: 98.057% (48538/49500)
+
+Validation Score:  0.888
+Epoch: 4
+
+Train Time used: 15 	 Loss: 1.429 | Train Acc: 98.212% (48615/49500)
+
+Validation Score:  0.902
+Epoch: 5
+
+Train Time used: 14 	 Loss: 1.374 | Train Acc: 98.370% (48693/49500)
+
+Validation Score:  0.894
+Epoch: 6
+
+Train Time used: 15 	 Loss: 1.328 | Train Acc: 98.479% (48747/49500)
+
+Validation Score:  0.894
+Epoch: 7
+
+Train Time used: 13 	 Loss: 1.295 | Train Acc: 98.612% (48813/49500)
+
+Validation Score:  0.89
+Epoch: 8
+
+Train Time used: 13 	 Loss: 1.266 | Train Acc: 98.681% (48847/49500)
+
+Validation Score:  0.884
+Epoch: 9
+
+Train Time used: 14 	 Loss: 1.249 | Train Acc: 98.717% (48865/49500)
+
+Validation Score:  0.882
+
+The test accurancy/score is : 0.8808
+phase:  2
+Making aux 2 network...
+Params to be updated
+features.10.weight
+features.10.bias
+features.11.weight
+features.11.bias
+features.13.weight
+features.13.bias
+features.14.weight
+features.14.bias
+features.16.weight
+features.16.bias
+features.17.weight
+features.17.bias
+Epoch: 0
+
+Train Time used: 12 	 Loss: 3.857 | Train Acc: 73.665% (36464/49500)
+
+Validation Score:  0.79
+Epoch: 1
+
+Train Time used: 12 	 Loss: 2.015 | Train Acc: 88.176% (43647/49500)
+
+Validation Score:  0.836
+Epoch: 2
+
+Train Time used: 12 	 Loss: 1.615 | Train Acc: 92.012% (45546/49500)
+
+Validation Score:  0.868
+Epoch: 3
+
+Train Time used: 12 	 Loss: 1.376 | Train Acc: 94.311% (46684/49500)
+
+Validation Score:  0.872
+Epoch: 4
+
+Train Time used: 12 	 Loss: 1.192 | Train Acc: 95.782% (47412/49500)
+
+Validation Score:  0.89
+Epoch: 5
+
+Train Time used: 14 	 Loss: 1.060 | Train Acc: 96.655% (47844/49500)
+
+Validation Score:  0.868
+Epoch: 6
+
+Train Time used: 12 	 Loss: 0.957 | Train Acc: 97.180% (48104/49500)
+
+Validation Score:  0.886
+Epoch: 7
+
+Train Time used: 12 	 Loss: 0.872 | Train Acc: 97.614% (48319/49500)
+
+Validation Score:  0.886
+Epoch: 8
+
+Train Time used: 12 	 Loss: 0.810 | Train Acc: 97.889% (48455/49500)
+
+Validation Score:  0.896
+Epoch: 9
+
+Train Time used: 12 	 Loss: 0.766 | Train Acc: 98.024% (48522/49500)
+
+Validation Score:  0.888
+
+The test accurancy/score is : 0.874
+phase:  3
+Making aux 3 network...
+Params to be updated
+features.20.weight
+features.20.bias
+features.21.weight
+features.21.bias
+features.23.weight
+features.23.bias
+features.24.weight
+features.24.bias
+features.26.weight
+features.26.bias
+features.27.weight
+features.27.bias
+features.29.weight
+features.29.bias
+features.30.weight
+features.30.bias
+Epoch: 0
+
+Train Time used: 12 	 Loss: 3.078 | Train Acc: 50.806% (25149/49500)
+
+Validation Score:  0.614
+Epoch: 1
+
+Train Time used: 14 	 Loss: 1.674 | Train Acc: 66.081% (32710/49500)
+
+Validation Score:  0.678
+Epoch: 2
+
+Train Time used: 13 	 Loss: 1.449 | Train Acc: 72.032% (35656/49500)
+
+Validation Score:  0.654
+Epoch: 3
+
+Train Time used: 12 	 Loss: 1.328 | Train Acc: 75.246% (37247/49500)
+
+Validation Score:  0.686
+Epoch: 4
+
+Train Time used: 12 	 Loss: 1.211 | Train Acc: 78.352% (38784/49500)
+
+Validation Score:  0.772
+Epoch: 5
+
+Train Time used: 12 	 Loss: 1.101 | Train Acc: 81.273% (40230/49500)
+
+Validation Score:  0.772
+Epoch: 6
+
+Train Time used: 12 	 Loss: 1.023 | Train Acc: 83.164% (41166/49500)
+
+Validation Score:  0.792
+Epoch: 7
+
+Train Time used: 14 	 Loss: 0.970 | Train Acc: 84.749% (41951/49500)
+
+Validation Score:  0.758
+Epoch: 8
+
+Train Time used: 14 	 Loss: 0.927 | Train Acc: 85.568% (42356/49500)
+
+Validation Score:  0.816
+Epoch: 9
+
+Train Time used: 12 	 Loss: 0.887 | Train Acc: 86.588% (42861/49500)
+
+Validation Score:  0.8
+
+The test accurancy/score is : 0.7807
+phase:  4
+Making aux 4 network...
+Params to be updated
+features.33.weight
+features.33.bias
+features.34.weight
+features.34.bias
+features.36.weight
+features.36.bias
+features.37.weight
+features.37.bias
+features.39.weight
+features.39.bias
+features.40.weight
+features.40.bias
+features.42.weight
+features.42.bias
+features.43.weight
+features.43.bias
+Epoch: 0
+
+Train Time used: 12 	 Loss: 1.522 | Train Acc: 74.016% (36638/49500)
+
+Validation Score:  0.798
+Epoch: 1
+
+Train Time used: 12 	 Loss: 0.710 | Train Acc: 83.018% (41094/49500)
+
+Validation Score:  0.812
+Epoch: 2
+
+Train Time used: 12 	 Loss: 0.576 | Train Acc: 85.778% (42460/49500)
+
+Validation Score:  0.826
+Epoch: 3
+
+Train Time used: 14 	 Loss: 0.492 | Train Acc: 87.634% (43379/49500)
+
+Validation Score:  0.816
+Epoch: 4
+
+Train Time used: 12 	 Loss: 0.442 | Train Acc: 88.982% (44046/49500)
+
+Validation Score:  0.794
+Epoch: 5
+
+Train Time used: 12 	 Loss: 0.402 | Train Acc: 90.020% (44560/49500)
+
+Validation Score:  0.844
+Epoch: 6
+
+Train Time used: 12 	 Loss: 0.369 | Train Acc: 90.937% (45014/49500)
+
+Validation Score:  0.834
+Epoch: 7
+
+Train Time used: 12 	 Loss: 0.351 | Train Acc: 91.206% (45147/49500)
+
+Validation Score:  0.806
+Epoch: 8
+
+Train Time used: 12 	 Loss: 0.331 | Train Acc: 91.844% (45463/49500)
+
+Validation Score:  0.812
+Epoch: 9
+
+Train Time used: 14 	 Loss: 0.319 | Train Acc: 92.087% (45583/49500)
+
+Validation Score:  0.85
+
+The test accurancy/score is : 0.8114
+phase:  5
+Making aux 5 network...
+Params to be updated
+features.46.weight
+features.46.bias
+features.47.weight
+features.47.bias
+features.49.weight
+features.49.bias
+features.50.weight
+features.50.bias
+features.52.weight
+features.52.bias
+features.53.weight
+features.53.bias
+features.55.weight
+features.55.bias
+features.56.weight
+features.56.bias
+Epoch: 0
+
+Train Time used: 12 	 Loss: 1.149 | Train Acc: 84.697% (41925/49500)
+
+Validation Score:  0.848
+Epoch: 1
+
+Train Time used: 12 	 Loss: 0.617 | Train Acc: 92.257% (45667/49500)
+
+Validation Score:  0.84
+Epoch: 2
+
+Train Time used: 12 	 Loss: 0.475 | Train Acc: 93.590% (46327/49500)
+
+Validation Score:  0.838
+Epoch: 3
+
+Train Time used: 12 	 Loss: 0.402 | Train Acc: 94.392% (46724/49500)
+
+Validation Score:  0.838
+Epoch: 4
+
+Train Time used: 12 	 Loss: 0.360 | Train Acc: 95.117% (47083/49500)
+
+Validation Score:  0.836
+Epoch: 5
+
+Train Time used: 14 	 Loss: 0.334 | Train Acc: 95.509% (47277/49500)
+
+Validation Score:  0.838
+Epoch: 6
+
+Train Time used: 12 	 Loss: 0.310 | Train Acc: 95.988% (47514/49500)
+
+Validation Score:  0.836
+Epoch: 7
+
+Train Time used: 12 	 Loss: 0.295 | Train Acc: 96.160% (47599/49500)
+
+Validation Score:  0.844
+Epoch: 8
+
+Train Time used: 12 	 Loss: 0.279 | Train Acc: 96.509% (47772/49500)
+
+Validation Score:  0.838
+Epoch: 9
+
+Train Time used: 12 	 Loss: 0.268 | Train Acc: 96.721% (47877/49500)
+
+Validation Score:  0.852
+
+The test accurancy/score is : 0.8229
