@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     ax = df2.plot(kind='line', style='x-')
     ax.set_ylabel("Accuracy")
-    ax.set_ylim([0.75, 0.95])
+    # ax.set_ylim([0.75, 0.9])
     fig = ax.get_figure()
     fig.savefig("pbt_alpha_acc.png", bbox_inches='tight')
 
